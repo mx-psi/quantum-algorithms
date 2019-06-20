@@ -1,23 +1,57 @@
 ---
-title: Programando ordenadores cuánticos
+title: Algoritmos cuánticos en Quipper
 author:  <span style="text-transform:lowercase"><a href="https://twitter.com/mx_psi"><span class="citation" data-cites="mx_psi">@mx_psi</span></a>(<a href="http://mstdn.io/@mx_psi"><span class="citation" data-cites="mstdn.io">@mstdn.io</span></a>)</span>
 lang: es
 theme: white
 ---
 
+# Quipper
+
 ## Instalación
 
 <div style="font-size:1.2em">
-[`mx-psi.github.io/libreim-quantum`](https://mx-psi.github.io/libreim-quantum)
+[`mx-psi.github.io/quantum-algorithms`](https://mx-psi.github.io/quantum-algorithms)
 </div>
 
 . . .
 
 1. Instalar [`stack`](https://docs.haskellstack.org/en/stable/README/),
-2. clonar [`mx-psi/libreim-quantum`](https://github.com/mx-psi/libreim-quantum) y 
-3. ejecutar `stack build`
+2. clonar [`mx-psi/quantum-algorithms`](https://github.com/mx-psi/quantum-algorithms) y 
+3. ejecutar `make build`
 
-# Computación clásica
+
+## El lenguaje
+
+Quipper es un lenguaje embebido en Haskell que permite definir circuitos.
+Nos permite:
+
+- Dar instrucciones para generar un circuito,
+- generar los circuitos y
+- ejecutarlos.
+
+Todas las operaciones ocurren en una mónada `Circ`.
+
+## Un ejemplo de circuito
+
+::::{.twocol}
+:::{}
+```haskell
+bellPair :: Circ (Qubit, Qubit)
+bellPair = do
+  (x, y, z) <- qinit (True, False, False)
+  y <- hadamard y
+  (x,y,z) <- toffoli (x, y, z)
+  qterm True x
+  pure (y, z)
+```
+:::
+:::{}
+![](img/bell.png)
+:::
+::::
+
+
+# Circuitos clásicos
 
 ## El espacio de estados
 
@@ -27,9 +61,7 @@ Un ordenador clásico hace cálculos con símbolos.
 Un **bit** es un elemento del espacio de estados $\mathbb{B} := \{0,1\}$.
 :::
 
-Podemos manipular un estado con varios bits.
-
-Con $n$ bits, el espacio de estados es $\mathbb{B}^n$.
+En Quipper el tipo de los bits es `Bit`.
 
 <aside class="notes">
 - Explicar $\mathbb{B}^n$.
@@ -46,90 +78,53 @@ Una **puerta clásica** es una función $f: \mathbb{B}^n \to \mathbb{B}^m$.
 - $m$ es el número de **salidas**.
 :::
 
+. . .
 
-:::{.example}
-$$\operatorname{NAND}(x,y) = \operatorname{NOT}(\operatorname{AND}(x,y))$$
-:::
 
-## Otras puertas
+```haskell
+cgate_and :: [Bit] -> Circ Bit
+cgate_not :: Bit -> Circ Bit
+cinit :: Bool -> Circ Bit
+cdiscard :: Bit -> Circ ()
+```
 
-:::{.definition}
-**FANOUT**: 1 entrada y 2 salidas,
-$$\operatorname{FANOUT}(x) = (x,x).$$
 
-**ANCILLA**$_x$: 0 entradas y 1 salida,
-$$\operatorname{ANCILLA}_x(\varepsilon) = x.$$
-
-**DESCARTA**: 1 entrada y 0 salidas,
-$$\operatorname{DESCARTA}(x) = \varepsilon.$$
-:::
+<aside class="notes">
+- Está la puerta FANOUT, ANCILLA y DESCARTA.
+- `cinit` es más general
+</aside>
 
 ## Circuitos
 
 :::{.definition}
-Un *circuito* es un grafo dirigido acíclico etiquetado
-
-- cada nodo es entrada, salida o una puerta,
-- entradas y salidas se asocian con un vértice cada una.
-- el grado de entrada y salida de un vértice coincide con el de su etiqueta.
+Un *circuito* es un grafo dirigido acíclico etiquetado con puertas, salidas y entradas, de tal forma que los grados coincidan.
 :::
 
-. . .
+Tiene una función $C:\mathbb{B}^n \to \mathbb{B}^m$ asociada.
 
-- Tiene una función $C:\mathbb{B}^n \to \mathbb{B}^m$ asociada.
-
-- $|C|$ es su número de nodos.
 
 <aside class="notes">
-Específicamente,
-
-1. si $v \in V$ es una puerta $f: \mathbb{B}^n \to \mathbb{B}^m$ entonces $\operatorname{deg}_{\operatorname{in}}(v) = n$ y $\operatorname{deg}_{\operatorname{out}}(v) = m$
-2. si $v \in V$ es una entrada, $\operatorname{deg}_{\operatorname{in}}(v) = 0$ y $\operatorname{deg}_{\operatorname{out}}(v) = 1$,
-3. si $v \in V$ es una salida, $\operatorname{deg}_{\operatorname{in}}(v) = 1$ y $\operatorname{deg}_{\operatorname{out}}(v) = 0$.
-
 - En principio las funciones asociadas a las puertas podrían no ser simétricas y habría que añadir también una ordenación de las aristas que inciden en cada puerta (omitimos esto en la definición)
-- Podemos medir aparte del tamaño, la «profundidad», que sirve para el paralelismo.
+- Podemos medir el tamaño y la «profundidad», que sirve para el paralelismo.
+- Lo hacemos respecto de un conjunto (universal)
 </aside>
 
-## Conjunto universal
+## Ejemplo: NAND
 
-:::{.definition}
-$\mathcal{B}$ es *universal* si toda función es la función asociada a un circuito con puertas en $\mathcal{B}$.
+:::::{.twocol}
+:::{}
+```haskell
+nand :: [Bit] -> Circ Bit
+nand xs = do
+  y <- cgate_and xs
+  cgate_not y
+```
 :::
-
-. . .
-
-:::{.example}
-$\mathcal{B} = \{\operatorname{OR},\operatorname{AND},\operatorname{FANOUT}\}$ **no** es universal
+:::{}
+![](img/xnor.png)
 :::
+:::::
 
-. . .
-
-:::{.example}
-$\mathcal{B} = \{\operatorname{NAND},\operatorname{FANOUT}\}$ es universal.
-:::
-
-
-<aside class="notes">
-- Los circuitos respecto de esa base se llaman *monótonos*. No pueden calcular NOT.
-- La clase $\mathsf{AC}^0$ se define a partir de circuitos monótonos; algunos teoremas relativizados pueden transformarse en teoremas no relativizados de esta clase.
-- La clasificación completa de las posibles bases viene dada por el retículo de Post.
-</asides>
-
-## Reversibilidad
-
-:::{.definition}
-La puerta *Toffoli* se define $$\operatorname{TOFFOLI}(x,y,z) = (x,y,z \oplus (x \cdot y))$$
-:::
-
-:::{.proposition}
-$\{\operatorname{TOFFOLI}, \operatorname{ANCILLA}_{x}, \operatorname{DESCARTA}\}$  es universal.
-:::
-
-<aside class="notes">
-- $\oplus$ es la operación XOR
-- La puerta de Toffoli es reversible!
-</aside>
 
 ## Familias de circuitos
 
@@ -145,97 +140,23 @@ Es *uniforme* si la función $n \mapsto C_n$ es computable.
 - Sin uniformidad podemos definir una sucesión que resuelva un problema indecidible (!).
 - Un lenguaje está en $\mathsf{P}$ si existe una familia uniforme de circuitos de tamaño polinomial que calcula $1_L$.
 </aside>
+## Circuitos reversibles
 
-# Computación probabilística
+Para hacer un circuito reversible, llevamos $f:\mathbb{B}^n \to \mathbb{B}^m$ en $$g(x,y) = (x, y \oplus f(x)).$$
 
-## El espacio de estados
+En Quipper esto se hace con la función `classical_to_reversible`,
 
-Con aleatoriedad, el estado será una distribución sobre $\mathbb{B}$.
+```haskell
+classical_to_reversible ::(qa -> Circ qb) 
+                       -> (qa, qb) -> Circ (qa, qb) 
+```
 
-:::{.example}
-Un bit aleatorio es un vector con norma 1 de un espacio vectorial real $R$ con base $\{| 0 \rangle, | 1 \rangle\}$,
-$$a |0\rangle + b |1 \rangle,\qquad a + b = 1, a,b \geq 0$$
-:::
-
-Si tenemos $n$ bits aleatorios, el espacio de estados es $R^{\otimes n}$.
 
 <aside class="notes">
-- $a$ y $b$ serán sus probabilidades.
-- Explicar producto tensorial.
-- Podemos ver la formación del espacio de estados compuesto como aplicar el producto de una categoria monoidal a un espacio de estados base.
-- El objeto unidad de la categoría sirve como $R^{\otimes 0}$.
+- El tipo está simplificado, `qa` y `qb` son `QCData`.
 </aside>
 
-## Puertas probabilísticas
-
-:::{.definition}
-Una *puerta* es una aplicación lineal $f: R^{\otimes n} \to R^{\otimes m}$ que lleva vectores de norma 1 en vectores de norma 1.
-
-Viene dada por una matriz estocástica.
-:::
-
-:::{.example}
-$$\operatorname{RANDOM}(v) = \frac12\begin{pmatrix}1 & 1 \\ 1 & 1\end{pmatrix}v$$
-:::
-
-<aside class="notes">
-- RANDOM ignora su entrada y devuelve una salida aleatoria.
-- Podemos hacer una puerta con cero entradas.
-
-- **(!)**: Un circuito se define exactamente igual
-</aside>
-
-## Circuitos
-
-La definición de circuito es análoga al caso clásico.
-
-Para calcular la función asociada a un circuito:
-
-1. escogemos un orden topológico de las puertas,
-2. extendemos a la dimensión adecuada y
-3. componemos en orden inverso.
-
-. . .
-
-La función es invariante al orden topológico ya que
-$$(f \otimes g) \circ (h \otimes s) = (f \circ h) \otimes (g \circ s).$$
-
-<aside class="notes">
-- Hacer ejemplo en pizarra.
-- Explicar producto de Kronecker.
-- Un buen ejemplo es random(0.1,0.9) → fanout → not en un cable y nada en el otro.
-- La independencia del orden topológico se sigue de la identidad
-</aside>
-
-## Clásica a probabilística
-
-Toda puerta clásica tiene una probabilística asociada: su extensión lineal.
-Su matriz es una matriz de permutación.
-
-Nos restringimos a circuitos formados por
-$$\{\operatorname{NAND}, \operatorname{FANOUT}, \operatorname{RANDOM}\}.$$
-
-<aside class="notes">
-En principio los circuitos con matrices estocásticas arbitrarias podrían permitirnos calcular funciones no computables, codificando en la probabilidad la información no computable.
-</aside>
-
-## Medición y error
-
-La salida de un circuito probabilístico será un vector de probabilidades que muestreamos.
-
-.  . .
-
-:::{.definition}
-$C: R^{\otimes n} \to R^{\otimes m}$ calcula $f: \mathbb{B}^n \to \mathbb{B}^m$ si
-$$P[C(x) = f(x)] \geq \frac23$$
-:::
-
-<aside class="notes">
-- El vector de probabilidades tendrá longitud $2^n$.
-- Estamos usando implícitamente que llevamos $i: \mathbb{B}^n \to R^{\otimes n}$
-</aside>
-
-# Computación cuántica
+# Circuitos cuánticos
 
 ## El espacio de estados
 
@@ -248,6 +169,7 @@ $\alpha$ y $\beta$ son las **amplitudes** de $|\psi\rangle$.
 :::
 
 Con $n$ qubits, el espacio de estados es $Q^{\otimes n}$.
+En Quipper, el tipo de un qubit es `Qubit`.
 
 <aside class="notes">
 - Explicar qué es un espacio de Hilbert (y que en el caso finito pueden pensar simplemente en que tiene un producto escalar).
@@ -265,9 +187,10 @@ La puerta de Hadamard se define
 $$H|x\rangle = \frac{1}{\sqrt{2}}(|0\rangle + (-1)^x|1\rangle)$$ 
 :::
 
-:::{.proposition}
-Hay conjuntos «universales» y finitos de puertas que aproximan cualquier otra puerta.
-:::
+En Quipper,
+```haskell
+hadamard :: Qubit -> Circ Qubit
+```
 
 <aside class="notes">
 - Unitaria significa que respeta el producto escalar o que su inversa sea su transpuesta conjugada.
@@ -285,174 +208,122 @@ $$|\psi\rangle = \sum_{i = 0}^{2^n-1} \alpha_i|i\rangle$$
 tenemos
 $$P(\operatorname{Meas}|\psi\rangle = i) = |\alpha_i|^2$$
 
+```haskell
+measure :: Qubit -> Circ Bit
+```
+
 <aside class="notes">
 - Podemos medir de otras formas que no comentamos aquí; nos basta con esta.
-- La calculabilidad se define igual que en el caso probabilístico.
+- `measure` tiene un tipo más general con `QShape`
 </aside>
 
-## Puertas clásicas
 
-Cualquier puerta clásica reversible es unitaria y podemos simular aleatoriedad con la puerta de Hadamard.
+## Medición y error
 
-Llevamos una función $f:\mathbb{B}^n \to \mathbb{B}^m$ a otra $$(x,y) \mapsto (x, y \oplus f(x)).$$
+La salida de un circuito será un vector de amplitudes que muestreamos.
+
+.  . .
+
+:::{.definition}
+$C: Q^{\otimes n} \to Q^{\otimes m}$ calcula $f: \mathbb{B}^n \to \mathbb{B}^m$ si
+$$P[C|x\rangle = f(x)] \geq \frac23$$
+:::
 
 <aside class="notes">
-- No hay clonación! Sólo FANOUT.
-- Vemos las implementaciones concretas en Quipper.
+- El vector de probabilidades tendrá longitud $2^n$.
+- Estamos usando implícitamente que llevamos $i: \mathbb{B}^n \to R^{\otimes n}$
 </aside>
 
-# Quipper
 
 
-## El lenguaje
+# Grover
 
-Quipper es un lenguaje embebido en Haskell que permite definir familias uniformes de circuitos.
+## El problema
 
-Distinguimos 3 etapas 
+Dada una función $f: \mathbb{B}^n \to \mathbb{B}$ y el número $$M = |\{x \;:\; f(x) = 1\}| > 0,$$ hallar una solución de $$f(x) = 1.$$
 
-1. tiempo de compilación,
-2. tiempo de generación de circuitos y
-3. tiempo de ejecución de circuitos.
+La función se nos da en forma de un circuito (oráculo) que calcula 
+$$U|x\rangle|y\rangle = |x\rangle|y\oplus f(x)\rangle.$$
+Lo encapsulamos en un tipo de datos `Oracle`.
 
-## Tipos
+## Operador de difusión
 
-Quipper trata con 3 tipos de datos
+El operador de difusión $D_n:Q^{\otimes n} \to Q^{\otimes n}$ consiste en
 
-`Bool`
-: Tipo de los **parámetros** (se conocen en tiempo de generación)
+1. Aplicar la puerta de Hadamard a cada qubit,
+2. aplicar un "cambio de fase" que lleva $$|x\rangle \mapsto (-1)^{\delta_{x0}} |x\rangle$$ y
+3. aplicar de nuevo la puerta de Hadamard a cada qubit.
 
-`Bit` y `Qubit`
-: Tipo de **entradas** clásicas y cuánticas (se conocen en tiempo de ejecución).
-
-Todas las operaciones ocurren en una mónada `Circ`.
-
-<aside class="notes">
-Podemos convertir un parámetro a una entrada con `qinit  :: Bool -> Circ Qubit`.
-</aside>
-
-***
-Vamos a definir el circuito más básico posible: un cable.
-Lo hacemos con notación `do`.
-
-::::{.twocol}
-:::{}
 ```haskell
-wire :: Qubit -> Circ Qubit
-wire x = do
-  pure x
+diffusion :: [Qubit] -> Circ [Qubit]
+diffusion = map_hadamard >=> phaseShift >=> map_hadamard
 ```
-<span style="font-size:0.5em">[Clasical.hs](https://github.com/mx-psi/libreim-quantum/blob/master/diagrams/Classical.hs)</span>
-:::
-:::{}
-![](img/wire.png)
-:::
-::::
 
-## Operaciones básicas
+## El operador de Grover
 
-Podemos usar las operaciones básicas.
+Si $|\downarrow\rangle = H|1\rangle$ entonces 
+$$U|x\rangle|\downarrow\rangle = (-1)^{f(x)}|x\rangle|\downarrow\rangle$$
 
-::::{.twocol}
-:::{}
+El operador de Grover consiste en
+
+1. Aplicar el oráculo, fijando el último qubit a $|\downarrow\rangle$ y
+2. aplicar el operador de difusión a todos salvo el resto de qubits.
+
+. . .
+
 ```haskell
-toffoli :: (Qubit,Qubit,Qubit) 
-   -> Circ (Qubit,Qubit,Qubit)
-qinit :: Bool -> Circ Qubit
-qdiscard :: Qubit -> Circ ()
+groverOperator oracle (xs, y) = do
+  (xs, y) <- circuit oracle (xs, y)
+  xs      <- diffusion xs
+  pure (xs, y)
 ```
-:::
-:::{}
-![](img/toffoli.png)
-:::
-::::
 
-## Puertas clásicas
+## Interpretación geométrica
 
-Por ejemplo, podemos definir `nand` utilizando estas operaciones
+El operador de Grover es la composición de dos reflexiones,
 
-::::{.twocol}
-:::{}
+1. El oráculo refleja respecto a la suma uniforme de los vectores que no son soluciones y
+2. el operador de difusión refleja respecto de la suma uniforme de las posibles entradas.
+
+¡La composición de dos reflexiones es una rotación!
+
+## El algoritmo de Grover
+
+Rotamos la suma uniforme de todas las entradas hasta acercarnos a la suma uniforme de todas las entradas.
+
 ```haskell
-nand :: (Qubit,Qubit) -> Circ Qubit
-nand (x,y) = do
-  z  <- qinit True
-  (x,y,z) <- toffoli (x,y,z)
-  qdiscard (x,y)
-  pure z
-```
-<span style="font-size:0.5em">[Classical.hs](https://github.com/mx-psi/libreim-quantum/blob/master/diagrams/Classical.hs)</span>
-:::
-:::{}
-![](img/nand.png)
-:::
-::::
-
-***
-
-Y la puerta `fanout`
-
-::::{.twocol}
-:::{}
-```haskell
-fanout :: Qubit -> Circ (Qubit, Qubit)
-fanout x = do
-  y  <- qinit True
-  z  <- qinit False
-  (x,y,z) <- toffoli (x,y,z)
+grover :: Int -> Oracle [Qubit] -> Circ [Bit]
+grover m oracle = do
+  (x, y) <- qinit (qc_false (shape oracle), True)
+  (x, y) <- map_hadamard (x, y)
+  (x, y) <- n `timesM` (groverOperator oracle) $ (x, y)
   qdiscard y
-  pure (x, z)
+  measure x
+  where n = ...
 ```
-<span style="font-size:0.5em">[Classical.hs](https://github.com/mx-psi/libreim-quantum/blob/master/diagrams/Classical.hs)</span>
-:::
-:::{}
-![](img/fanout.png)
-:::
-::::
 
-***
-Y combinarlas por ejemplo para definir la puerta `not`.
+Se puede probar con el ejecutable `quantum`.
 
-::::{.twocol}
-:::{}
+# Extra
+
+## Referencias
+
+- [*Quantum Computation and Quantum Information*](http://mmrc.amss.cas.cn/tlb/201702/W020170224608149940643.pdf) - Nielsen & Chuang
+- [*One Complexity Theorist’s View of Quantum Computing*](https://people.cs.uchicago.edu/~fortnow/papers/quantview.pdf) - Fortnow
+- [*Quantum Computational Complexity*](https://arxiv.org/pdf/0804.3401.pdf) - Watrous
+- [*An Introduction to Quantum Programming in Quipper*](https://arxiv.org/abs/1304.5485) - Green et al.
+
+## `QShape`
+
+La clase de tipos `QShape` permite generalizar los tipos de las funciones:
+
 ```haskell
-notCirc :: Qubit -> Circ Qubit
-notCirc x = do
-  (x,x') <- fanout x
-  y <- nand (x,x')
-  pure y
+instance QShape Bool Bit Qubit where 
+...
+
+instance QShape ba ca qa => QShape [ba] [ca] [qa] where
+...
 ```
-<span style="font-size:0.5em">[Classical.hs](https://github.com/mx-psi/libreim-quantum/blob/master/diagrams/Classical.hs)</span>
-:::
-:::{}
-![](img/not.png)
-:::
-::::
-
-## Entrelazamiento
-
-::::{.twocol}
-:::{}
-```haskell
-bellPair :: Circ (Qubit, Qubit)
-bellPair = do
-  (x, y, z) <- qinit (True, False, False)
-  hadamard y
-  toffoli (x, y, z)
-  qterm True x
-  pure (y, z)
-```
-:::
-:::{}
-![](img/bell.png)
-:::
-::::
-
-<aside class="notes">
-- Vemos aquí el estilo imperativo, que también es posible.
-- Creamos una pareja entrelazada.
-- Es un ejemplo de circuito sin entradas
-- Podemos ejecutarlo en `diagrams`.
-</aside>
 
 ## Generación de circuitos
 
@@ -479,69 +350,3 @@ xnor = unpack template_boolean_xnor
 - Los puntos blancos son porque negamos a ambos lados para cambiar la condición sobre la que condicionamos
 - También podemos hacer operaciones con circuitos como revertirlos o cambiar la base universal.
 </aside>
-
-## El algoritmo de Deutsch
-
-![](img/deutsch.png)
-
-***
-
-```haskell
-deutsch :: ((Qubit,Qubit) -> Circ (Qubit,Qubit)) -> Circ Bit
-deutsch oracle = do
-  (x,y) <- qinit (False,True)
-  (x,y) <- map_hadamard (x,y)
-  (x,y) <- oracle (x,y)
-  x <- map_hadamard x
-  z <- measure x
-  qdiscard y
-  pure z
-```
-<span style="font-size:0.5em">[Deutsch.hs](https://github.com/mx-psi/libreim-quantum/blob/master/deutsch/Deutsch.hs)</span>
-
-## `QShape`
-
-La clase de tipos `QShape` generaliza
-
-```haskell
-instance QShape Bool Bit Qubit where 
-...
-
-instance QShape ba ca qa => QShape [ba] [ca] [qa] where
-...
-```
-
-
-## El algoritmo de Deutsch-Jozsa
-
-```haskell
-data Oracle qa = Oracle {
-  shape   :: qa,
-  circuit :: (qa,Qubit) -> Circ (qa,Qubit)
-  }
-```
-<span style="font-size:0.5em">[Oracle.hs](https://github.com/mx-psi/libreim-quantum/blob/master/src/Oracle.hs)</span>
-
-****
-
-```haskell
-deutschJozsa :: (QShape ba qa ca) => Oracle qa -> Circ ca
-deutschJozsa oracle = do
-  (x, y) <- qinit $ (qc_false (shape oracle), True)
-  (x, y) <- map_hadamard (x, y)
-  (x, y) <- boxedOracle (x, y)
-  x      <- map_hadamard x
-  z      <- measure x
-  qdiscard y
-  pure z
-```
-<span style="font-size:0.5em">[Deutsch.hs](https://github.com/mx-psi/libreim-quantum/blob/master/deutsch/Deutsch.hs)</span>
-
-# Fin
-
-## Referencias
-
-- [*Quantum Computation and Quantum Information*](http://mmrc.amss.cas.cn/tlb/201702/W020170224608149940643.pdf) - Nielsen & Chuang
-- [*One Complexity Theorist’s View of Quantum Computing*](https://people.cs.uchicago.edu/~fortnow/papers/quantview.pdf) - Fortnow
-- [*Quantum Computational Complexity*](https://arxiv.org/pdf/0804.3401.pdf) - Watrous
-- [*An Introduction to Quantum Programming in Quipper*](https://arxiv.org/abs/1304.5485) - Green et al.

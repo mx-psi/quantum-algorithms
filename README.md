@@ -56,6 +56,11 @@ For example, the NOT logical operation can be given as
 
 Some examples of oracles are included in the `oracles` folder.
 
+The second binary, `diagrams`, generates the diagrams used in the document.
+The option `--gen-all` generates a selection of the diagrams used,
+while providing a circuit in the form of a truth table with the option `--circuit` generates a circuit diagram for the reversible version of
+that circuit.
+
 Documentation
 =============
 
@@ -65,6 +70,10 @@ folder. It can be rebuilt by using `make docs`.
 Note that the process for building the documentation requires the manual
 preprocessing of the code files and thus can not directly be done using
 `stack`.
+
+To generate the documentation on Windows the `Makefile` MUST be edited
+and the preprocessing script be changed as it was the case in the
+building process.
 
 Testing
 =======

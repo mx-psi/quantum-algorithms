@@ -61,6 +61,12 @@ Por ejemplo, la operación lógica NOT puede ser expresada como
 
 Algunos ejemplos de oráculos se incluyen en la carpeta `oracles`.
 
+El segundo binario, `diagrams`, genera los diagramas usados en el documento.
+La opción `--gen-all` genera una selección de los diagramas utilizados,
+mientras que si se indica el nombre de un circuito en forma de una tabla de verdad
+con la opción `--circuit`, se genera un diagrama para 
+la versión reversible de ese circuito.
+
 Documentación
 =============
 
@@ -70,6 +76,9 @@ La documentación, generada con Haddock, está disponible en la carpeta
 Nótese que el proceso de generación de la documentación requiere del
 preprocesado manual de los ficheros de código y por tanto no puede
 hacerse directamente con `stack`.
+
+Si quiere generarse la documentación en Windows DEBE cambiarse en el `Makefile`
+el script de preprocesado utilizado como en el caso de la compilación.
 
 Pruebas
 =======

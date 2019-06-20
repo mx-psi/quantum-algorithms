@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="generator" content="pandoc">
   <meta name="author" content="@mx_psi(@mstdn.io)">
-  <title>Programando ordenadores cuánticos</title>
+  <title>Algoritmos cuánticos en Quipper</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
@@ -96,31 +96,55 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <div class="slides">
 
 <section id="title-slide">
-  <h1 class="title">Programando ordenadores cuánticos</h1>
+  <h1 class="title">Algoritmos cuánticos en Quipper</h1>
   <p class="author"><span style="text-transform:lowercase"><a href="https://twitter.com/mx_psi"><span class="citation" data-cites="mx_psi"><span class="citation" data-cites="mx_psi">@mx_psi</span></span></a>(<a href="http://mstdn.io/@mx_psi"><span class="citation" data-cites="mstdn.io"><span class="citation" data-cites="mstdn.io">@mstdn.io</span></span></a>)</span></p>
 </section>
 
-<section id="instalación" class="slide level2">
+<section><section id="quipper" class="title-slide slide level1"><h1>Quipper</h1></section><section id="instalación" class="slide level2">
 <h2>Instalación</h2>
 <div style="font-size:1.2em">
-<p><a href="https://mx-psi.github.io/libreim-quantum"><code>mx-psi.github.io/libreim-quantum</code></a></p>
+<p><a href="https://mx-psi.github.io/quantum-algorithms"><code>mx-psi.github.io/quantum-algorithms</code></a></p>
 </div>
 <div class="fragment">
 <ol type="1">
 <li>Instalar <a href="https://docs.haskellstack.org/en/stable/README/"><code>stack</code></a>,</li>
-<li>clonar <a href="https://github.com/mx-psi/libreim-quantum"><code>mx-psi/libreim-quantum</code></a> y</li>
-<li>ejecutar <code>stack build</code></li>
+<li>clonar <a href="https://github.com/mx-psi/quantum-algorithms"><code>mx-psi/quantum-algorithms</code></a> y</li>
+<li>ejecutar <code>make build</code></li>
 </ol>
 </div>
-</section>
-<section><section id="computación-clásica" class="title-slide slide level1"><h1>Computación clásica</h1></section><section id="el-espacio-de-estados" class="slide level2">
+</section><section id="el-lenguaje" class="slide level2">
+<h2>El lenguaje</h2>
+<p>Quipper es un lenguaje embebido en Haskell que permite definir circuitos. Nos permite:</p>
+<ul>
+<li>Dar instrucciones para generar un circuito,</li>
+<li>generar los circuitos y</li>
+<li>ejecutarlos.</li>
+</ul>
+<p>Todas las operaciones ocurren en una mónada <code>Circ</code>.</p>
+</section><section id="un-ejemplo-de-circuito" class="slide level2">
+<h2>Un ejemplo de circuito</h2>
+<div class="twocol">
+<div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="ot">bellPair ::</span> <span class="dt">Circ</span> (<span class="dt">Qubit</span>, <span class="dt">Qubit</span>)</a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">bellPair <span class="fu">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">  (x, y, z) <span class="ot">&lt;-</span> qinit (<span class="dt">True</span>, <span class="dt">False</span>, <span class="dt">False</span>)</a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">  y <span class="ot">&lt;-</span> hadamard y</a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">  (x,y,z) <span class="ot">&lt;-</span> toffoli (x, y, z)</a>
+<a class="sourceLine" id="cb1-6" data-line-number="6">  qterm <span class="dt">True</span> x</a>
+<a class="sourceLine" id="cb1-7" data-line-number="7">  pure (y, z)</a></code></pre></div>
+</div>
+<div>
+<p><img data-src="img/bell.png" /></p>
+</div>
+</div>
+</section></section>
+<section><section id="circuitos-clásicos" class="title-slide slide level1"><h1>Circuitos clásicos</h1></section><section id="el-espacio-de-estados" class="slide level2">
 <h2>El espacio de estados</h2>
 <p>Un ordenador clásico hace cálculos con símbolos.</p>
 <div class="example">
 <p>Un <strong>bit</strong> es un elemento del espacio de estados <span class="math inline">\(\mathbb{B} := \{0,1\}\)</span>.</p>
 </div>
-<p>Podemos manipular un estado con varios bits.</p>
-<p>Con <span class="math inline">\(n\)</span> bits, el espacio de estados es <span class="math inline">\(\mathbb{B}^n\)</span>.</p>
+<p>En Quipper el tipo de los bits es <code>Bit</code>.</p>
 <aside class="notes">
 <ul>
 <li>Explicar <span class="math inline">\(\mathbb{B}^n\)</span>.</li>
@@ -137,79 +161,44 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li><span class="math inline">\(m\)</span> es el número de <strong>salidas</strong>.</li>
 </ul>
 </div>
-<div class="example">
-<p><span class="math display">\[\operatorname{NAND}(x,y) = \operatorname{NOT}(\operatorname{AND}(x,y))\]</span></p>
-</div>
-</section><section id="otras-puertas" class="slide level2">
-<h2>Otras puertas</h2>
-<div class="definition">
-<p><strong>FANOUT</strong>: 1 entrada y 2 salidas, <span class="math display">\[\operatorname{FANOUT}(x) = (x,x).\]</span></p>
-<p><strong>ANCILLA</strong><span class="math inline">\(_x\)</span>: 0 entradas y 1 salida, <span class="math display">\[\operatorname{ANCILLA}_x(\varepsilon) = x.\]</span></p>
-<p><strong>DESCARTA</strong>: 1 entrada y 0 salidas, <span class="math display">\[\operatorname{DESCARTA}(x) = \varepsilon.\]</span></p>
+<div class="fragment">
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="ot">cgate_and ::</span> [<span class="dt">Bit</span>] <span class="ot">-&gt;</span> <span class="dt">Circ</span> <span class="dt">Bit</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2"><span class="ot">cgate_not ::</span> <span class="dt">Bit</span> <span class="ot">-&gt;</span> <span class="dt">Circ</span> <span class="dt">Bit</span></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="ot">cinit ::</span> <span class="dt">Bool</span> <span class="ot">-&gt;</span> <span class="dt">Circ</span> <span class="dt">Bit</span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="ot">cdiscard ::</span> <span class="dt">Bit</span> <span class="ot">-&gt;</span> <span class="dt">Circ</span> ()</a></code></pre></div>
+<aside class="notes">
+<ul>
+<li>Está la puerta FANOUT, ANCILLA y DESCARTA.</li>
+<li><code>cinit</code> es más general</li>
+</ul>
+</aside>
 </div>
 </section><section id="circuitos" class="slide level2">
 <h2>Circuitos</h2>
 <div class="definition">
-<p>Un <em>circuito</em> es un grafo dirigido acíclico etiquetado</p>
-<ul>
-<li>cada nodo es entrada, salida o una puerta,</li>
-<li>entradas y salidas se asocian con un vértice cada una.</li>
-<li>el grado de entrada y salida de un vértice coincide con el de su etiqueta.</li>
-</ul>
+<p>Un <em>circuito</em> es un grafo dirigido acíclico etiquetado con puertas, salidas y entradas, de tal forma que los grados coincidan.</p>
 </div>
-<div class="fragment">
-<ul>
-<li><p>Tiene una función <span class="math inline">\(C:\mathbb{B}^n \to \mathbb{B}^m\)</span> asociada.</p></li>
-<li><p><span class="math inline">\(|C|\)</span> es su número de nodos.</p></li>
-</ul>
+<p>Tiene una función <span class="math inline">\(C:\mathbb{B}^n \to \mathbb{B}^m\)</span> asociada.</p>
 <aside class="notes">
-<p>Específicamente,</p>
-<ol type="1">
-<li>si <span class="math inline">\(v \in V\)</span> es una puerta <span class="math inline">\(f: \mathbb{B}^n \to \mathbb{B}^m\)</span> entonces <span class="math inline">\(\operatorname{deg}_{\operatorname{in}}(v) = n\)</span> y <span class="math inline">\(\operatorname{deg}_{\operatorname{out}}(v) = m\)</span></li>
-<li>si <span class="math inline">\(v \in V\)</span> es una entrada, <span class="math inline">\(\operatorname{deg}_{\operatorname{in}}(v) = 0\)</span> y <span class="math inline">\(\operatorname{deg}_{\operatorname{out}}(v) = 1\)</span>,</li>
-<li>si <span class="math inline">\(v \in V\)</span> es una salida, <span class="math inline">\(\operatorname{deg}_{\operatorname{in}}(v) = 1\)</span> y <span class="math inline">\(\operatorname{deg}_{\operatorname{out}}(v) = 0\)</span>.</li>
-</ol>
 <ul>
 <li>En principio las funciones asociadas a las puertas podrían no ser simétricas y habría que añadir también una ordenación de las aristas que inciden en cada puerta (omitimos esto en la definición)</li>
-<li>Podemos medir aparte del tamaño, la «profundidad», que sirve para el paralelismo.</li>
+<li>Podemos medir el tamaño y la «profundidad», que sirve para el paralelismo.</li>
+<li>Lo hacemos respecto de un conjunto (universal)</li>
 </ul>
 </aside>
+</section><section id="ejemplo-nand" class="slide level2">
+<h2>Ejemplo: NAND</h2>
+<div class="twocol">
+<div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="ot">nand ::</span> [<span class="dt">Bit</span>] <span class="ot">-&gt;</span> <span class="dt">Circ</span> <span class="dt">Bit</span></a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">nand xs <span class="fu">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb3-3" data-line-number="3">  y <span class="ot">&lt;-</span> cgate_and xs</a>
+<a class="sourceLine" id="cb3-4" data-line-number="4">  cgate_not y</a></code></pre></div>
 </div>
-</section><section id="conjunto-universal" class="slide level2">
-<h2>Conjunto universal</h2>
-<div class="definition">
-<p><span class="math inline">\(\mathcal{B}\)</span> es <em>universal</em> si toda función es la función asociada a un circuito con puertas en <span class="math inline">\(\mathcal{B}\)</span>.</p>
-</div>
-<div class="fragment">
-<div class="example">
-<p><span class="math inline">\(\mathcal{B} = \{\operatorname{OR},\operatorname{AND},\operatorname{FANOUT}\}\)</span> <strong>no</strong> es universal</p>
+<div>
+<p><img data-src="img/nand.png" /></p>
 </div>
 </div>
-<div class="fragment">
-<div class="example">
-<p><span class="math inline">\(\mathcal{B} = \{\operatorname{NAND},\operatorname{FANOUT}\}\)</span> es universal.</p>
-</div>
-<aside class="notes">
-<ul>
-<li>Los circuitos respecto de esa base se llaman <em>monótonos</em>. No pueden calcular NOT.</li>
-<li>La clase <span class="math inline">\(\mathsf{AC}^0\)</span> se define a partir de circuitos monótonos; algunos teoremas relativizados pueden transformarse en teoremas no relativizados de esta clase.</li>
-<li>La clasificación completa de las posibles bases viene dada por el retículo de Post. </asides></li>
-</ul>
-</div>
-</section><section id="reversibilidad" class="slide level2">
-<h2>Reversibilidad</h2>
-<div class="definition">
-<p>La puerta <em>Toffoli</em> se define <span class="math display">\[\operatorname{TOFFOLI}(x,y,z) = (x,y,z \oplus (x \cdot y))\]</span></p>
-</div>
-<div class="proposition">
-<p><span class="math inline">\(\{\operatorname{TOFFOLI}, \operatorname{ANCILLA}_{x}, \operatorname{DESCARTA}\}\)</span> es universal.</p>
-</div>
-<aside class="notes">
-<ul>
-<li><span class="math inline">\(\oplus\)</span> es la operación XOR</li>
-<li>La puerta de Toffoli es reversible!</li>
-</ul>
-</aside>
 </section><section id="familias-de-circuitos" class="slide level2">
 <h2>Familias de circuitos</h2>
 <p>Cuando necesitamos tener una entrada de tamaño arbitrario, consideramos una familia de circuitos <span class="math inline">\(\mathcal{C} = \{C_n\}_{n \in \mathbb{N}}\)</span>, tal que <span class="math inline">\(C_n\)</span> tiene <span class="math inline">\(n\)</span> entradas.</p>
@@ -223,87 +212,25 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li>Un lenguaje está en <span class="math inline">\(\mathsf{P}\)</span> si existe una familia uniforme de circuitos de tamaño polinomial que calcula <span class="math inline">\(1_L\)</span>.</li>
 </ul>
 </aside>
+</section><section id="circuitos-reversibles" class="slide level2">
+<h2>Circuitos reversibles</h2>
+<p>Para hacer un circuito reversible, llevamos <span class="math inline">\(f:\mathbb{B}^n \to \mathbb{B}^m\)</span> en <span class="math display">\[g(x,y) = (x, y \oplus f(x)).\]</span></p>
+<p>En Quipper esto se hace con la función <code>classical_to_reversible</code>,</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="ot">classical_to_reversible ::</span>(qa <span class="ot">-&gt;</span> <span class="dt">Circ</span> qb) </a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">                       <span class="ot">-&gt;</span> (qa, qb) <span class="ot">-&gt;</span> <span class="dt">Circ</span> (qa, qb) </a></code></pre></div>
+<aside class="notes">
+<ul>
+<li>El tipo está simplificado, <code>qa</code> y <code>qb</code> son <code>QCData</code>.</li>
+</ul>
+</aside>
 </section></section>
-<section><section id="computación-probabilística" class="title-slide slide level1"><h1>Computación probabilística</h1></section><section id="el-espacio-de-estados-1" class="slide level2">
-<h2>El espacio de estados</h2>
-<p>Con aleatoriedad, el estado será una distribución sobre <span class="math inline">\(\mathbb{B}\)</span>.</p>
-<div class="example">
-<p>Un bit aleatorio es un vector con norma 1 de un espacio vectorial real <span class="math inline">\(R\)</span> con base <span class="math inline">\(\{| 0 \rangle, | 1 \rangle\}\)</span>, <span class="math display">\[a |0\rangle + b |1 \rangle,\qquad a + b = 1, a,b \geq 0\]</span></p>
-</div>
-<p>Si tenemos <span class="math inline">\(n\)</span> bits aleatorios, el espacio de estados es <span class="math inline">\(R^{\otimes n}\)</span>.</p>
-<aside class="notes">
-<ul>
-<li><span class="math inline">\(a\)</span> y <span class="math inline">\(b\)</span> serán sus probabilidades.</li>
-<li>Explicar producto tensorial.</li>
-<li>Podemos ver la formación del espacio de estados compuesto como aplicar el producto de una categoria monoidal a un espacio de estados base.</li>
-<li>El objeto unidad de la categoría sirve como <span class="math inline">\(R^{\otimes 0}\)</span>.</li>
-</ul>
-</aside>
-</section><section id="puertas-probabilísticas" class="slide level2">
-<h2>Puertas probabilísticas</h2>
-<div class="definition">
-<p>Una <em>puerta</em> es una aplicación lineal <span class="math inline">\(f: R^{\otimes n} \to R^{\otimes m}\)</span> que lleva vectores de norma 1 en vectores de norma 1.</p>
-<p>Viene dada por una matriz estocástica.</p>
-</div>
-<div class="example">
-<p><span class="math display">\[\operatorname{RANDOM}(v) = \frac12\begin{pmatrix}1 &amp; 1 \\ 1 &amp; 1\end{pmatrix}v\]</span></p>
-</div>
-<aside class="notes">
-<ul>
-<li>RANDOM ignora su entrada y devuelve una salida aleatoria.</li>
-<li><p>Podemos hacer una puerta con cero entradas.</p></li>
-<li><strong>(!)</strong>: Un circuito se define exactamente igual</li>
-</ul>
-</aside>
-</section><section id="circuitos-1" class="slide level2">
-<h2>Circuitos</h2>
-<p>La definición de circuito es análoga al caso clásico.</p>
-<p>Para calcular la función asociada a un circuito:</p>
-<ol type="1">
-<li>escogemos un orden topológico de las puertas,</li>
-<li>extendemos a la dimensión adecuada y</li>
-<li>componemos en orden inverso.</li>
-</ol>
-<div class="fragment">
-<p>La función es invariante al orden topológico ya que <span class="math display">\[(f \otimes g) \circ (h \otimes s) = (f \circ h) \otimes (g \circ s).\]</span></p>
-<aside class="notes">
-<ul>
-<li>Hacer ejemplo en pizarra.</li>
-<li>Explicar producto de Kronecker.</li>
-<li>Un buen ejemplo es random(0.1,0.9) → fanout → not en un cable y nada en el otro.</li>
-<li>La independencia del orden topológico se sigue de la identidad</li>
-</ul>
-</aside>
-</div>
-</section><section id="clásica-a-probabilística" class="slide level2">
-<h2>Clásica a probabilística</h2>
-<p>Toda puerta clásica tiene una probabilística asociada: su extensión lineal. Su matriz es una matriz de permutación.</p>
-<p>Nos restringimos a circuitos formados por <span class="math display">\[\{\operatorname{NAND}, \operatorname{FANOUT}, \operatorname{RANDOM}\}.\]</span></p>
-<aside class="notes">
-En principio los circuitos con matrices estocásticas arbitrarias podrían permitirnos calcular funciones no computables, codificando en la probabilidad la información no computable.
-</aside>
-</section><section id="medición-y-error" class="slide level2">
-<h2>Medición y error</h2>
-<p>La salida de un circuito probabilístico será un vector de probabilidades que muestreamos.</p>
-<div class="fragment">
-<div class="definition">
-<p><span class="math inline">\(C: R^{\otimes n} \to R^{\otimes m}\)</span> calcula <span class="math inline">\(f: \mathbb{B}^n \to \mathbb{B}^m\)</span> si <span class="math display">\[P[C(x) = f(x)] \geq \frac23\]</span></p>
-</div>
-<aside class="notes">
-<ul>
-<li>El vector de probabilidades tendrá longitud <span class="math inline">\(2^n\)</span>.</li>
-<li>Estamos usando implícitamente que llevamos <span class="math inline">\(i: \mathbb{B}^n \to R^{\otimes n}\)</span></li>
-</ul>
-</aside>
-</div>
-</section></section>
-<section><section id="computación-cuántica" class="title-slide slide level1"><h1>Computación cuántica</h1></section><section id="el-espacio-de-estados-2" class="slide level2">
+<section><section id="circuitos-cuánticos" class="title-slide slide level1"><h1>Circuitos cuánticos</h1></section><section id="el-espacio-de-estados-1" class="slide level2">
 <h2>El espacio de estados</h2>
 <p>El espacio de estados es un espacio de Hilbert separable complejo.</p>
 <div class="example">
 <p>Un <strong>qubit</strong> es un vector unitario de un espacio vectorial complejo con base ortonormal <span class="math inline">\(\{|0\rangle,|1\rangle\}\)</span>, <span class="math display">\[|\psi\rangle = \alpha |0\rangle + \beta |1\rangle, \qquad |\alpha|^2 + |\beta|^2 = 1\]</span> <span class="math inline">\(\alpha\)</span> y <span class="math inline">\(\beta\)</span> son las <strong>amplitudes</strong> de <span class="math inline">\(|\psi\rangle\)</span>.</p>
 </div>
-<p>Con <span class="math inline">\(n\)</span> qubits, el espacio de estados es <span class="math inline">\(Q^{\otimes n}\)</span>.</p>
+<p>Con <span class="math inline">\(n\)</span> qubits, el espacio de estados es <span class="math inline">\(Q^{\otimes n}\)</span>. En Quipper, el tipo de un qubit es <code>Qubit</code>.</p>
 <aside class="notes">
 <ul>
 <li>Explicar qué es un espacio de Hilbert (y que en el caso finito pueden pensar simplemente en que tiene un producto escalar).</li>
@@ -317,9 +244,8 @@ En principio los circuitos con matrices estocásticas arbitrarias podrían permi
 <div class="example">
 <p>La puerta de Hadamard se define <span class="math display">\[H|x\rangle = \frac{1}{\sqrt{2}}(|0\rangle + (-1)^x|1\rangle)\]</span></p>
 </div>
-<div class="proposition">
-<p>Hay conjuntos «universales» y finitos de puertas que aproximan cualquier otra puerta.</p>
-</div>
+<p>En Quipper,</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="ot">hadamard ::</span> <span class="dt">Qubit</span> <span class="ot">-&gt;</span> <span class="dt">Circ</span> <span class="dt">Qubit</span></a></code></pre></div>
 <aside class="notes">
 <ul>
 <li>Unitaria significa que respeta el producto escalar o que su inversa sea su transpuesta conjugada.</li>
@@ -332,161 +258,107 @@ En principio los circuitos con matrices estocásticas arbitrarias podrían permi
 </section><section id="medición" class="slide level2">
 <h2>Medición</h2>
 <p>La salida de un circuito cuántico será un vector unitario. Si medimos <span class="math display">\[|\psi\rangle = \sum_{i = 0}^{2^n-1} \alpha_i|i\rangle\]</span> tenemos <span class="math display">\[P(\operatorname{Meas}|\psi\rangle = i) = |\alpha_i|^2\]</span></p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="ot">measure ::</span> <span class="dt">Qubit</span> <span class="ot">-&gt;</span> <span class="dt">Circ</span> <span class="dt">Bit</span></a></code></pre></div>
 <aside class="notes">
 <ul>
 <li>Podemos medir de otras formas que no comentamos aquí; nos basta con esta.</li>
-<li>La calculabilidad se define igual que en el caso probabilístico.</li>
+<li><code>measure</code> tiene un tipo más general con <code>QShape</code></li>
 </ul>
 </aside>
-</section><section id="puertas-clásicas-1" class="slide level2">
-<h2>Puertas clásicas</h2>
-<p>Cualquier puerta clásica reversible es unitaria y podemos simular aleatoriedad con la puerta de Hadamard.</p>
-<p>Llevamos una función <span class="math inline">\(f:\mathbb{B}^n \to \mathbb{B}^m\)</span> a otra <span class="math display">\[(x,y) \mapsto (x, y \oplus f(x)).\]</span></p>
+</section><section id="medición-y-error" class="slide level2">
+<h2>Medición y error</h2>
+<p>La salida de un circuito será un vector de amplitudes que muestreamos.</p>
+<div class="fragment">
+<div class="definition">
+<p><span class="math inline">\(C: Q^{\otimes n} \to Q^{\otimes m}\)</span> calcula <span class="math inline">\(f: \mathbb{B}^n \to \mathbb{B}^m\)</span> si <span class="math display">\[P[C|x\rangle = f(x)] \geq \frac23\]</span></p>
+</div>
 <aside class="notes">
 <ul>
-<li>No hay clonación! Sólo FANOUT.</li>
-<li>Vemos las implementaciones concretas en Quipper.</li>
+<li>El vector de probabilidades tendrá longitud <span class="math inline">\(2^n\)</span>.</li>
+<li>Estamos usando implícitamente que llevamos <span class="math inline">\(i: \mathbb{B}^n \to R^{\otimes n}\)</span></li>
 </ul>
 </aside>
+</div>
 </section></section>
-<section><section id="quipper" class="title-slide slide level1"><h1>Quipper</h1></section><section id="el-lenguaje" class="slide level2">
-<h2>El lenguaje</h2>
-<p>Quipper es un lenguaje embebido en Haskell que permite definir familias uniformes de circuitos.</p>
-<p>Distinguimos 3 etapas</p>
+<section><section id="grover" class="title-slide slide level1"><h1>Grover</h1></section><section id="el-problema" class="slide level2">
+<h2>El problema</h2>
+<p>Dada una función <span class="math inline">\(f: \mathbb{B}^n \to \mathbb{B}\)</span> y el número <span class="math display">\[M = |\{x \;:\; f(x) = 1\}| &gt; 0,\]</span> hallar una solución de <span class="math display">\[f(x) = 1.\]</span></p>
+<p>La función se nos da en forma de un circuito (oráculo) que calcula <span class="math display">\[U|x\rangle|y\rangle = |x\rangle|y\oplus f(x)\rangle.\]</span> Lo encapsulamos en un tipo de datos <code>Oracle</code>.</p>
+</section><section id="operador-de-difusión" class="slide level2">
+<h2>Operador de difusión</h2>
+<p>El operador de difusión <span class="math inline">\(D_n:Q^{\otimes n} \to Q^{\otimes n}\)</span> consiste en</p>
 <ol type="1">
-<li>tiempo de compilación,</li>
-<li>tiempo de generación de circuitos y</li>
-<li>tiempo de ejecución de circuitos.</li>
+<li>Aplicar la puerta de Hadamard a cada qubit,</li>
+<li>aplicar un “cambio de fase” que lleva <span class="math display">\[|x\rangle \mapsto (-1)^{\delta_{x0}} |x\rangle\]</span> y</li>
+<li>aplicar de nuevo la puerta de Hadamard a cada qubit.</li>
 </ol>
-</section><section id="tipos" class="slide level2">
-<h2>Tipos</h2>
-<p>Quipper trata con 3 tipos de datos</p>
-<dl>
-<dt><code>Bool</code></dt>
-<dd>Tipo de los <strong>parámetros</strong> (se conocen en tiempo de generación)
-</dd>
-<dt><code>Bit</code> y <code>Qubit</code></dt>
-<dd>Tipo de <strong>entradas</strong> clásicas y cuánticas (se conocen en tiempo de ejecución).
-</dd>
-</dl>
-<p>Todas las operaciones ocurren en una mónada <code>Circ</code>.</p>
-<aside class="notes">
-Podemos convertir un parámetro a una entrada con <code>qinit  :: Bool -&gt; Circ Qubit</code>.
-</aside>
-</section><section class="slide level2">
-
-<p>Vamos a definir el circuito más básico posible: un cable. Lo hacemos con notación <code>do</code>.</p>
-<div class="twocol">
-<div>
-<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="ot">wire ::</span> <span class="dt">Qubit</span> <span class="ot">-&gt;</span> <span class="dt">Circ</span> <span class="dt">Qubit</span></a>
-<a class="sourceLine" id="cb1-2" data-line-number="2">wire x <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb1-3" data-line-number="3">  pure x</a></code></pre></div>
-<p><span style="font-size:0.5em"><a href="https://github.com/mx-psi/libreim-quantum/blob/master/diagrams/Classical.hs">Clasical.hs</a></span></p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb7-1" data-line-number="1"><span class="ot">diffusion ::</span> [<span class="dt">Qubit</span>] <span class="ot">-&gt;</span> <span class="dt">Circ</span> [<span class="dt">Qubit</span>]</a>
+<a class="sourceLine" id="cb7-2" data-line-number="2">diffusion <span class="fu">=</span> map_hadamard <span class="fu">&gt;=&gt;</span> phaseShift <span class="fu">&gt;=&gt;</span> map_hadamard</a></code></pre></div>
+</section><section id="el-operador-de-grover" class="slide level2">
+<h2>El operador de Grover</h2>
+<p>Si <span class="math inline">\(|\downarrow\rangle = H|1\rangle\)</span> entonces <span class="math display">\[U|x\rangle|\downarrow\rangle = (-1)^{f(x)}|x\rangle|\downarrow\rangle\]</span></p>
+<p>El operador de Grover consiste en</p>
+<ol type="1">
+<li>Aplicar el oráculo, fijando el último qubit a <span class="math inline">\(|\downarrow\rangle\)</span> y</li>
+<li>aplicar el operador de difusión a todos salvo el resto de qubits.</li>
+</ol>
+<div class="fragment">
+<div class="sourceCode" id="cb8"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb8-1" data-line-number="1">groverOperator oracle (xs, y) <span class="fu">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb8-2" data-line-number="2">  (xs, y) <span class="ot">&lt;-</span> circuit oracle (xs, y)</a>
+<a class="sourceLine" id="cb8-3" data-line-number="3">  xs      <span class="ot">&lt;-</span> diffusion xs</a>
+<a class="sourceLine" id="cb8-4" data-line-number="4">  pure (xs, y)</a></code></pre></div>
 </div>
-<div>
-<p><img data-src="img/wire.png" /></p>
-</div>
-</div>
-</section><section id="operaciones-básicas" class="slide level2">
-<h2>Operaciones básicas</h2>
-<p>Podemos usar las operaciones básicas.</p>
-<div class="twocol">
-<div>
-<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="ot">toffoli ::</span> (<span class="dt">Qubit</span>,<span class="dt">Qubit</span>,<span class="dt">Qubit</span>) </a>
-<a class="sourceLine" id="cb2-2" data-line-number="2">   <span class="ot">-&gt;</span> <span class="dt">Circ</span> (<span class="dt">Qubit</span>,<span class="dt">Qubit</span>,<span class="dt">Qubit</span>)</a>
-<a class="sourceLine" id="cb2-3" data-line-number="3"><span class="ot">qinit ::</span> <span class="dt">Bool</span> <span class="ot">-&gt;</span> <span class="dt">Circ</span> <span class="dt">Qubit</span></a>
-<a class="sourceLine" id="cb2-4" data-line-number="4"><span class="ot">qdiscard ::</span> <span class="dt">Qubit</span> <span class="ot">-&gt;</span> <span class="dt">Circ</span> ()</a></code></pre></div>
-</div>
-<div>
-<p><img data-src="img/toffoli.png" /></p>
-</div>
-</div>
-</section><section id="puertas-clásicas-2" class="slide level2">
-<h2>Puertas clásicas</h2>
-<p>Por ejemplo, podemos definir <code>nand</code> utilizando estas operaciones</p>
-<div class="twocol">
-<div>
-<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="ot">nand ::</span> (<span class="dt">Qubit</span>,<span class="dt">Qubit</span>) <span class="ot">-&gt;</span> <span class="dt">Circ</span> <span class="dt">Qubit</span></a>
-<a class="sourceLine" id="cb3-2" data-line-number="2">nand (x,y) <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb3-3" data-line-number="3">  z  <span class="ot">&lt;-</span> qinit <span class="dt">True</span></a>
-<a class="sourceLine" id="cb3-4" data-line-number="4">  (x,y,z) <span class="ot">&lt;-</span> toffoli (x,y,z)</a>
-<a class="sourceLine" id="cb3-5" data-line-number="5">  qdiscard (x,y)</a>
-<a class="sourceLine" id="cb3-6" data-line-number="6">  pure z</a></code></pre></div>
-<p><span style="font-size:0.5em"><a href="https://github.com/mx-psi/libreim-quantum/blob/master/diagrams/Classical.hs">Classical.hs</a></span></p>
-</div>
-<div>
-<p><img data-src="img/nand.png" /></p>
-</div>
-</div>
-</section><section class="slide level2">
-
-<p>Y la puerta <code>fanout</code></p>
-<div class="twocol">
-<div>
-<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb4-1" data-line-number="1"><span class="ot">fanout ::</span> <span class="dt">Qubit</span> <span class="ot">-&gt;</span> <span class="dt">Circ</span> (<span class="dt">Qubit</span>, <span class="dt">Qubit</span>)</a>
-<a class="sourceLine" id="cb4-2" data-line-number="2">fanout x <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb4-3" data-line-number="3">  y  <span class="ot">&lt;-</span> qinit <span class="dt">True</span></a>
-<a class="sourceLine" id="cb4-4" data-line-number="4">  z  <span class="ot">&lt;-</span> qinit <span class="dt">False</span></a>
-<a class="sourceLine" id="cb4-5" data-line-number="5">  (x,y,z) <span class="ot">&lt;-</span> toffoli (x,y,z)</a>
-<a class="sourceLine" id="cb4-6" data-line-number="6">  qdiscard y</a>
-<a class="sourceLine" id="cb4-7" data-line-number="7">  pure (x, z)</a></code></pre></div>
-<p><span style="font-size:0.5em"><a href="https://github.com/mx-psi/libreim-quantum/blob/master/diagrams/Classical.hs">Classical.hs</a></span></p>
-</div>
-<div>
-<p><img data-src="img/fanout.png" /></p>
-</div>
-</div>
-</section><section class="slide level2">
-
-<p>Y combinarlas por ejemplo para definir la puerta <code>not</code>.</p>
-<div class="twocol">
-<div>
-<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="ot">notCirc ::</span> <span class="dt">Qubit</span> <span class="ot">-&gt;</span> <span class="dt">Circ</span> <span class="dt">Qubit</span></a>
-<a class="sourceLine" id="cb5-2" data-line-number="2">notCirc x <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb5-3" data-line-number="3">  (x,x&#39;) <span class="ot">&lt;-</span> fanout x</a>
-<a class="sourceLine" id="cb5-4" data-line-number="4">  y <span class="ot">&lt;-</span> nand (x,x&#39;)</a>
-<a class="sourceLine" id="cb5-5" data-line-number="5">  pure y</a></code></pre></div>
-<p><span style="font-size:0.5em"><a href="https://github.com/mx-psi/libreim-quantum/blob/master/diagrams/Classical.hs">Classical.hs</a></span></p>
-</div>
-<div>
-<p><img data-src="img/not.png" /></p>
-</div>
-</div>
-</section><section id="entrelazamiento" class="slide level2">
-<h2>Entrelazamiento</h2>
-<div class="twocol">
-<div>
-<div class="sourceCode" id="cb6"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb6-1" data-line-number="1"><span class="ot">bellPair ::</span> <span class="dt">Circ</span> (<span class="dt">Qubit</span>, <span class="dt">Qubit</span>)</a>
-<a class="sourceLine" id="cb6-2" data-line-number="2">bellPair <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb6-3" data-line-number="3">  (x, y, z) <span class="ot">&lt;-</span> qinit (<span class="dt">True</span>, <span class="dt">False</span>, <span class="dt">False</span>)</a>
-<a class="sourceLine" id="cb6-4" data-line-number="4">  hadamard y</a>
-<a class="sourceLine" id="cb6-5" data-line-number="5">  toffoli (x, y, z)</a>
-<a class="sourceLine" id="cb6-6" data-line-number="6">  qterm <span class="dt">True</span> x</a>
-<a class="sourceLine" id="cb6-7" data-line-number="7">  pure (y, z)</a></code></pre></div>
-</div>
-<div>
-<p><img data-src="img/bell.png" /></p>
-</div>
-</div>
-<aside class="notes">
+</section><section id="interpretación-geométrica" class="slide level2">
+<h2>Interpretación geométrica</h2>
+<p>El operador de Grover es la composición de dos reflexiones,</p>
+<ol type="1">
+<li>El oráculo refleja respecto a la suma uniforme de los vectores que no son soluciones y</li>
+<li>el operador de difusión refleja respecto de la suma uniforme de las posibles entradas.</li>
+</ol>
+<p>¡La composición de dos reflexiones es una rotación!</p>
+</section><section id="el-algoritmo-de-grover" class="slide level2">
+<h2>El algoritmo de Grover</h2>
+<p>Rotamos la suma uniforme de todas las entradas hasta acercarnos a la suma uniforme de todas las entradas.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="ot">grover ::</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Oracle</span> [<span class="dt">Qubit</span>] <span class="ot">-&gt;</span> <span class="dt">Circ</span> [<span class="dt">Bit</span>]</a>
+<a class="sourceLine" id="cb9-2" data-line-number="2">grover m oracle <span class="fu">=</span> <span class="kw">do</span></a>
+<a class="sourceLine" id="cb9-3" data-line-number="3">  (x, y) <span class="ot">&lt;-</span> qinit (qc_false (shape oracle), <span class="dt">True</span>)</a>
+<a class="sourceLine" id="cb9-4" data-line-number="4">  (x, y) <span class="ot">&lt;-</span> map_hadamard (x, y)</a>
+<a class="sourceLine" id="cb9-5" data-line-number="5">  (x, y) <span class="ot">&lt;-</span> n <span class="ot">`timesM`</span> (groverOperator oracle) <span class="fu">$</span> (x, y)</a>
+<a class="sourceLine" id="cb9-6" data-line-number="6">  qdiscard y</a>
+<a class="sourceLine" id="cb9-7" data-line-number="7">  measure x</a>
+<a class="sourceLine" id="cb9-8" data-line-number="8">  <span class="kw">where</span> n <span class="fu">=</span> <span class="fu">...</span></a></code></pre></div>
+<p>Se puede probar con el ejecutable <code>quantum</code>.</p>
+</section><section id="circuito" class="slide level2">
+<h2>Circuito</h2>
+<p><img data-src="img/grover.png" /></p>
+</section></section>
+<section><section id="extra" class="title-slide slide level1"><h1>Extra</h1></section><section id="referencias" class="slide level2">
+<h2>Referencias</h2>
 <ul>
-<li>Vemos aquí el estilo imperativo, que también es posible.</li>
-<li>Creamos una pareja entrelazada.</li>
-<li>Es un ejemplo de circuito sin entradas</li>
-<li>Podemos ejecutarlo en <code>diagrams</code>.</li>
+<li><a href="http://mmrc.amss.cas.cn/tlb/201702/W020170224608149940643.pdf"><em>Quantum Computation and Quantum Information</em></a> - Nielsen &amp; Chuang</li>
+<li><a href="https://people.cs.uchicago.edu/~fortnow/papers/quantview.pdf"><em>One Complexity Theorist’s View of Quantum Computing</em></a> - Fortnow</li>
+<li><a href="https://arxiv.org/pdf/0804.3401.pdf"><em>Quantum Computational Complexity</em></a> - Watrous</li>
+<li><a href="https://arxiv.org/abs/1304.5485"><em>An Introduction to Quantum Programming in Quipper</em></a> - Green et al.</li>
 </ul>
-</aside>
+</section><section id="qshape" class="slide level2">
+<h2><code>QShape</code></h2>
+<p>La clase de tipos <code>QShape</code> permite generalizar los tipos de las funciones:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="kw">instance</span> <span class="dt">QShape</span> <span class="dt">Bool</span> <span class="dt">Bit</span> <span class="dt">Qubit</span> <span class="kw">where</span> </a>
+<a class="sourceLine" id="cb10-2" data-line-number="2"><span class="fu">...</span></a>
+<a class="sourceLine" id="cb10-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb10-4" data-line-number="4"><span class="kw">instance</span> <span class="dt">QShape</span> ba ca qa <span class="ot">=&gt;</span> <span class="dt">QShape</span> [ba] [ca] [qa] <span class="kw">where</span></a>
+<a class="sourceLine" id="cb10-5" data-line-number="5"><span class="fu">...</span></a></code></pre></div>
 </section><section id="generación-de-circuitos" class="slide level2">
 <h2>Generación de circuitos</h2>
 <p>Podemos generar circuitos automáticamente a partir de funciones booleanas.</p>
 <div class="twocol">
 <div>
-<div class="sourceCode" id="cb7"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb7-1" data-line-number="1">build_circuit</a>
-<a class="sourceLine" id="cb7-2" data-line-number="2">boolean_xnor (x,y) <span class="fu">=</span> </a>
-<a class="sourceLine" id="cb7-3" data-line-number="3">  (not x <span class="fu">||</span> y) <span class="fu">&amp;&amp;</span>  (x <span class="fu">||</span> not y)</a>
-<a class="sourceLine" id="cb7-4" data-line-number="4"></a>
-<a class="sourceLine" id="cb7-5" data-line-number="5"><span class="ot">xnor ::</span> (<span class="dt">Qubit</span>,<span class="dt">Qubit</span>) <span class="ot">-&gt;</span> <span class="dt">Circ</span> <span class="dt">Qubit</span></a>
-<a class="sourceLine" id="cb7-6" data-line-number="6">xnor <span class="fu">=</span> unpack template_boolean_xnor</a></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb11-1" data-line-number="1">build_circuit</a>
+<a class="sourceLine" id="cb11-2" data-line-number="2">boolean_xnor (x,y) <span class="fu">=</span> </a>
+<a class="sourceLine" id="cb11-3" data-line-number="3">  (not x <span class="fu">||</span> y) <span class="fu">&amp;&amp;</span>  (x <span class="fu">||</span> not y)</a>
+<a class="sourceLine" id="cb11-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb11-5" data-line-number="5"><span class="ot">xnor ::</span> (<span class="dt">Qubit</span>,<span class="dt">Qubit</span>) <span class="ot">-&gt;</span> <span class="dt">Circ</span> <span class="dt">Qubit</span></a>
+<a class="sourceLine" id="cb11-6" data-line-number="6">xnor <span class="fu">=</span> unpack template_boolean_xnor</a></code></pre></div>
 <p><span style="font-size:0.5em"><a href="https://github.com/mx-psi/libreim-quantum/blob/master/diagrams/Classical.hs">Classical.hs</a></span></p>
 </div>
 <div>
@@ -499,57 +371,6 @@ Podemos convertir un parámetro a una entrada con <code>qinit  :: Bool -&gt; Cir
 <li>También podemos hacer operaciones con circuitos como revertirlos o cambiar la base universal.</li>
 </ul>
 </aside>
-</section><section id="el-algoritmo-de-deutsch" class="slide level2">
-<h2>El algoritmo de Deutsch</h2>
-<p><img data-src="img/deutsch.png" /></p>
-</section><section class="slide level2">
-
-<div class="sourceCode" id="cb8"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb8-1" data-line-number="1"><span class="ot">deutsch ::</span> ((<span class="dt">Qubit</span>,<span class="dt">Qubit</span>) <span class="ot">-&gt;</span> <span class="dt">Circ</span> (<span class="dt">Qubit</span>,<span class="dt">Qubit</span>)) <span class="ot">-&gt;</span> <span class="dt">Circ</span> <span class="dt">Bit</span></a>
-<a class="sourceLine" id="cb8-2" data-line-number="2">deutsch oracle <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb8-3" data-line-number="3">  (x,y) <span class="ot">&lt;-</span> qinit (<span class="dt">False</span>,<span class="dt">True</span>)</a>
-<a class="sourceLine" id="cb8-4" data-line-number="4">  (x,y) <span class="ot">&lt;-</span> map_hadamard (x,y)</a>
-<a class="sourceLine" id="cb8-5" data-line-number="5">  (x,y) <span class="ot">&lt;-</span> oracle (x,y)</a>
-<a class="sourceLine" id="cb8-6" data-line-number="6">  x <span class="ot">&lt;-</span> map_hadamard x</a>
-<a class="sourceLine" id="cb8-7" data-line-number="7">  z <span class="ot">&lt;-</span> measure x</a>
-<a class="sourceLine" id="cb8-8" data-line-number="8">  qdiscard y</a>
-<a class="sourceLine" id="cb8-9" data-line-number="9">  pure z</a></code></pre></div>
-<p><span style="font-size:0.5em"><a href="https://github.com/mx-psi/libreim-quantum/blob/master/deutsch/Deutsch.hs">Deutsch.hs</a></span></p>
-</section><section id="qshape" class="slide level2">
-<h2><code>QShape</code></h2>
-<p>La clase de tipos <code>QShape</code> generaliza</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="kw">instance</span> <span class="dt">QShape</span> <span class="dt">Bool</span> <span class="dt">Bit</span> <span class="dt">Qubit</span> <span class="kw">where</span> </a>
-<a class="sourceLine" id="cb9-2" data-line-number="2"><span class="fu">...</span></a>
-<a class="sourceLine" id="cb9-3" data-line-number="3"></a>
-<a class="sourceLine" id="cb9-4" data-line-number="4"><span class="kw">instance</span> <span class="dt">QShape</span> ba ca qa <span class="ot">=&gt;</span> <span class="dt">QShape</span> [ba] [ca] [qa] <span class="kw">where</span></a>
-<a class="sourceLine" id="cb9-5" data-line-number="5"><span class="fu">...</span></a></code></pre></div>
-</section><section id="el-algoritmo-de-deutsch-jozsa" class="slide level2">
-<h2>El algoritmo de Deutsch-Jozsa</h2>
-<div class="sourceCode" id="cb10"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb10-1" data-line-number="1"><span class="kw">data</span> <span class="dt">Oracle</span> qa <span class="fu">=</span> <span class="dt">Oracle</span> {</a>
-<a class="sourceLine" id="cb10-2" data-line-number="2"><span class="ot">  shape   ::</span> qa,</a>
-<a class="sourceLine" id="cb10-3" data-line-number="3"><span class="ot">  circuit ::</span> (qa,<span class="dt">Qubit</span>) <span class="ot">-&gt;</span> <span class="dt">Circ</span> (qa,<span class="dt">Qubit</span>)</a>
-<a class="sourceLine" id="cb10-4" data-line-number="4">  }</a></code></pre></div>
-<p><span style="font-size:0.5em"><a href="https://github.com/mx-psi/libreim-quantum/blob/master/src/Oracle.hs">Oracle.hs</a></span></p>
-</section><section class="slide level2">
-
-<div class="sourceCode" id="cb11"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb11-1" data-line-number="1"><span class="ot">deutschJozsa ::</span> (<span class="dt">QShape</span> ba qa ca) <span class="ot">=&gt;</span> <span class="dt">Oracle</span> qa <span class="ot">-&gt;</span> <span class="dt">Circ</span> ca</a>
-<a class="sourceLine" id="cb11-2" data-line-number="2">deutschJozsa oracle <span class="fu">=</span> <span class="kw">do</span></a>
-<a class="sourceLine" id="cb11-3" data-line-number="3">  (x, y) <span class="ot">&lt;-</span> qinit <span class="fu">$</span> (qc_false (shape oracle), <span class="dt">True</span>)</a>
-<a class="sourceLine" id="cb11-4" data-line-number="4">  (x, y) <span class="ot">&lt;-</span> map_hadamard (x, y)</a>
-<a class="sourceLine" id="cb11-5" data-line-number="5">  (x, y) <span class="ot">&lt;-</span> boxedOracle (x, y)</a>
-<a class="sourceLine" id="cb11-6" data-line-number="6">  x      <span class="ot">&lt;-</span> map_hadamard x</a>
-<a class="sourceLine" id="cb11-7" data-line-number="7">  z      <span class="ot">&lt;-</span> measure x</a>
-<a class="sourceLine" id="cb11-8" data-line-number="8">  qdiscard y</a>
-<a class="sourceLine" id="cb11-9" data-line-number="9">  pure z</a></code></pre></div>
-<p><span style="font-size:0.5em"><a href="https://github.com/mx-psi/libreim-quantum/blob/master/deutsch/Deutsch.hs">Deutsch.hs</a></span></p>
-</section></section>
-<section><section id="fin" class="title-slide slide level1"><h1>Fin</h1></section><section id="referencias" class="slide level2">
-<h2>Referencias</h2>
-<ul>
-<li><a href="http://mmrc.amss.cas.cn/tlb/201702/W020170224608149940643.pdf"><em>Quantum Computation and Quantum Information</em></a> - Nielsen &amp; Chuang</li>
-<li><a href="https://people.cs.uchicago.edu/~fortnow/papers/quantview.pdf"><em>One Complexity Theorist’s View of Quantum Computing</em></a> - Fortnow</li>
-<li><a href="https://arxiv.org/pdf/0804.3401.pdf"><em>Quantum Computational Complexity</em></a> - Watrous</li>
-<li><a href="https://arxiv.org/abs/1304.5485"><em>An Introduction to Quantum Programming in Quipper</em></a> - Green et al.</li>
-</ul>
 </section></section>
     </div>
   </div>

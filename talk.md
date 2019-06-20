@@ -121,7 +121,7 @@ nand xs = do
 ```
 :::
 :::{}
-![](img/xnor.png)
+![](img/nand.png)
 :::
 :::::
 
@@ -303,6 +303,10 @@ grover m oracle = do
 ```
 
 Se puede probar con el ejecutable `quantum`.
+
+## Circuito
+
+![](img/grover.png)
 
 # Extra
 

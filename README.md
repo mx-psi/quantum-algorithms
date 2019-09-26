@@ -1,3 +1,8 @@
+This project was developed for my undergraduate dissertation. 
+You may read the complete text [on this separate repository](https://github.com/mx-psi/tfg).
+
+-----------
+
 A copy of this file in spanish is available on file `LEEME.md`.
 
 Dependencies
